@@ -44,6 +44,20 @@ else if (cmd === 'move' || cmd === 'mv') {
         });
     });
 }
+else if (cmd === 'restart') {
+    argv._.shift();
+    var name = argv.name || argv._.shift();
+    getRemote(function (err, remote) {
+        if (err) return error(err);
+        
+        var hq = hyperquest(remote + '/restart/' + name);
+        hq.pipe(process.stdout);
+        hq.on('error', function (err) {
+            var msg = 'Error connecting to ' + remote + ': ' + err.message;
+            console.error(msg);
+        });
+    });
+}
 else if (cmd === 'remove' || cmd === 'rm') {
     argv._.shift();
     var name = argv.name || argv._.shift();
@@ -101,7 +115,10 @@ else if (cmd === 'log' && argv._.length) {
         });
     });
 }
-else {
+else if (true || cmd === 'server') {
+    // `ploy` server mode without `ploy server` is scheduled for demolition
+    if (cmd === 'server') argv._.shift();
+    
     var dir = path.resolve(argv.dir || argv.d || argv._.shift() || '.');
     var authFile = argv.auth || argv.a;
     var opts = {

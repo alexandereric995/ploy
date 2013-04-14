@@ -13,7 +13,7 @@ create an auth file and start the ploy server:
 
 ```
 $ echo '{ "beep": "boop" }' > auth.json
-$ sudo ploy ./data -p 80 -a auth.json
+$ sudo ploy server ./data -p 80 -a auth.json
 ```
 
 then from a git repo with a `server.js` and/or a `scripts.start` in its
@@ -63,8 +63,8 @@ previous server running under the same branch name will be killed.
 ```
 usage:
 
-  ploy DIRECTORY PORT
-  ploy { -d DIRECTORY | -p PORT | -a AUTHFILE }
+  ploy server DIRECTORY PORT
+  ploy server { -d DIRECTORY | -p PORT | -a AUTHFILE }
 
     Create a ploy http server, hosting repositories in DIRECTORY and listening
     on PORT for incoming connections.
@@ -93,6 +93,10 @@ usage:
   ploy rm NAME { -r REMOTE }
  
     Remove the branch name at NAME, killing any running processes.
+ 
+  ploy restart NAME { -r REMOTE }
+ 
+    Restart the process at NAME.
  
   ploy help [TOPIC]
  

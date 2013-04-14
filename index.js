@@ -167,33 +167,61 @@ Ploy.prototype.deploy = function (commit) {
             stream.pipe(ws);
         }
         self.emit('output', name, stream);
+        
+        [ 'start', 'restart', 'exit' ].forEach(function (ev) {
+            procs.on(ev, function (name, ps) {
+                var logMessage = {
+                    event: ev,
+                    date : new Date,
+                    host: name,
+                    pid: ps.pid,
+                    hash  : commit.hash,
+                    dir : commit.dir,
+                    repo : commit.repo,
+                    branch : commit.branch
+                };
+                stream.write(JSON.stringify(logMessage) + "\n");
+            });
+        });
     });
     
-    procs.on('run', function (name, ps) {
-        self.emit('run', name, ps);
+    procs.on('start', function (name, ps) {
+        self.emit('start', name, ps);
         
         var to = setTimeout(function () {
             // didn't crash in 3 seconds, add to routing table
-            if (self.branches[name]) {
-                self.remove(name);
-            }
-            self.add(name, {
-                port: ps.port,
-                hash: commit.hash,
-                repo: commit.repo,
-                branch: commit.branch,
-                key: ps.key,
-                process: ps
-            });
+            addServer(name, ps);
         }, self.branches[name] ? self.delay : 0);
         
         ps.once('exit', function (code) {
             clearTimeout(to);
-            
+        });
+    });
+    
+    procs.on('restart', function (name, ps) {
+        self.emit('restart', name, ps);
+        addServer(name, ps);
+    });
+    
+    function addServer (name, ps) {
+        if (self.branches[name]) {
+            self.remove(name);
+        }
+        self.add(name, {
+            port: ps.port,
+            hash: commit.hash,
+            repo: commit.repo,
+            branch: commit.branch,
+            key: ps.key,
+            process: ps
+        });
+        
+        ps.once('exit', function (code) {
             var b = self.branches[name];
             if (b && b.hash === commit.hash) ps.respawn();
         });
-    });
+    }
+    
 };
 
 Ploy.prototype.add = function (name, rec) {
